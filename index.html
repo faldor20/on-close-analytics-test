@@ -287,9 +287,13 @@
                 // Fallback to localStorage
                 const stored = localStorage.getItem('analyticsConfig');
                 if (stored) {
-                    const parsed = JSON.parse(stored);
-                    config.endpoint = parsed.endpoint || '';
-                    config.method = parsed.method || 'beacon';
+                    try {
+                        const parsed = JSON.parse(stored);
+                        config.endpoint = parsed.endpoint || '';
+                        config.method = parsed.method || 'beacon';
+                    } catch (error) {
+                        addLog('⚠️ Failed to parse stored config, using defaults', 'error');
+                    }
                 }
             }
             
@@ -451,7 +455,7 @@
         function testManualSend() {
             const success = sendAnalytics('manual_test', { 
                 trigger: 'button_click',
-                testId: Math.random().toString(36).substr(2, 9)
+                testId: Math.random().toString(36).substring(2, 11)
             });
             if (success !== false) {
                 addLog('📤 Manual test triggered', 'info');
