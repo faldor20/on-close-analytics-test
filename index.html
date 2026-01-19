@@ -398,14 +398,12 @@
             
             // beforeunload - fires when page is about to be unloaded
             window.addEventListener('beforeunload', (e) => {
-                addLog('🚨 Event: beforeunload', 'event');
                 sendAnalytics('beforeunload', { trigger: 'page_close_or_reload' });
             });
             listeners.push('beforeunload');
             
             // pagehide - more reliable than beforeunload
             window.addEventListener('pagehide', (e) => {
-                addLog('🚨 Event: pagehide (persisted: ' + e.persisted + ')', 'event');
                 sendAnalytics('pagehide', { persisted: e.persisted });
             });
             listeners.push('pagehide');
