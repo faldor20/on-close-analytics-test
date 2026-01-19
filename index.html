@@ -435,6 +435,7 @@
             
             // unload - least reliable, included for completeness
             window.addEventListener('unload', () => {
+                addLog('🚨 Event: unload', 'event');
                 sendAnalytics('unload');
             });
             listeners.push('unload');
