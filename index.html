@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>On-Close Analytics Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        h2 {
+            color: #555;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .config-section {
+            display: grid;
+            gap: 15px;
+        }
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label {
+            font-weight: 600;
+            color: #555;
+        }
+        input[type="text"], input[type="url"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .test-button {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        #eventLog {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .log-entry {
+            padding: 5px;
+            margin-bottom: 5px;
+            border-left: 3px solid #007bff;
+            padding-left: 10px;
+        }
+        .log-entry.success {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        .log-entry.error {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .log-entry.event {
+            border-left-color: #ffc107;
+            background-color: #fff3cd;
+        }
+        .timestamp {
+            color: #6c757d;
+            font-size: 11px;
+        }
+        .clear-log {
+            background-color: #6c757d;
+            margin-top: 10px;
+        }
+        .clear-log:hover {
+            background-color: #545b62;
+        }
+        .event-listeners {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .listener-status {
+            padding: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .listener-status.active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .info-box {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #004085;
+        }
+        .info-box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔬 On-Close Analytics Test</h1>
+    
+    <div class="container">
+        <h2>⚙️ Configuration</h2>
+        <div class="config-section">
+            <div class="config-item">
+                <label for="endpoint">Analytics Endpoint URL:</label>
+                <input type="url" id="endpoint" placeholder="https://webhook.site/your-unique-id">
+            </div>
+            
+            <div class="config-item">
+                <label>Sending Method:</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" id="methodBeacon" name="method" value="beacon" checked>
+                        <label for="methodBeacon">Navigator.sendBeacon()</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="methodFetch" name="method" value="fetch">
+                        <label for="methodFetch">Fetch with keepalive</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-item">
+                <button onclick="saveConfig()">💾 Save Configuration</button>
+                <div id="configStatus"></div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <h3>How to use:</h3>
+            <ul>
+                <li>Enter your webhook endpoint URL (e.g., from <a href="https://webhook.site" target="_blank">webhook.site</a>)</li>
+                <li>Choose between sendBeacon or fetch with keepalive</li>
+                <li>Configuration is saved in URL parameters for easy sharing</li>
+                <li>Test different browser events using the buttons below</li>
+                <li>Try closing the tab, switching tabs, or navigating away to test real scenarios</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🧪 Test Events</h2>
+        <div>
+            <button class="test-button" onclick="testManualSend()">📤 Manual Test Send</button>
+            <button class="test-button" onclick="testTimeout()">⏱️ Test with 2s Timeout</button>
+            <button class="test-button" onclick="triggerVisibilityChange()">👁️ Simulate Visibility Change</button>
+            <button class="test-button" onclick="window.location.href='#test'">🔗 Trigger Navigation</button>
+        </div>
+        
+        <div class="info-box" style="margin-top: 20px;">
+            <h3>Active Event Listeners:</h3>
+            <div class="event-listeners" id="listenerStatus"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📋 Event Log</h2>
+        <div id="eventLog"></div>
+        <button class="clear-log" onclick="clearLog()">🗑️ Clear Log</button>
+    </div>
+
+    <script>
+        // Configuration management
+        let config = {
+            endpoint: '',
+            method: 'beacon'
+        };
+
+        // Log management
+        let eventLog = [];
+
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toISOString();
+            const logEntry = { timestamp, message, type };
+            eventLog.push(logEntry);
+            
+            const logDiv = document.getElementById('eventLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `
+                <div class="timestamp">${timestamp}</div>
+                <div>${message}</div>
+            `;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            // Keep only last 100 entries
+            if (eventLog.length > 100) {
+                eventLog.shift();
+                logDiv.removeChild(logDiv.firstChild);
+            }
+        }
+
+        function clearLog() {
+            eventLog = [];
+            document.getElementById('eventLog').innerHTML = '';
+            addLog('Log cleared', 'info');
+        }
+
+        // URL parameter and localStorage management
+        function loadConfig() {
+            // Try URL parameters first
+            const urlParams = new URLSearchParams(window.location.search);
+            const endpointParam = urlParams.get('endpoint');
+            const methodParam = urlParams.get('method');
+            
+            if (endpointParam) {
+                config.endpoint = endpointParam;
+                config.method = methodParam || 'beacon';
+            } else {
+                // Fallback to localStorage
+                const stored = localStorage.getItem('analyticsConfig');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    config.endpoint = parsed.endpoint || '';
+                    config.method = parsed.method || 'beacon';
+                }
+            }
+            
+            // Update UI
+            document.getElementById('endpoint').value = config.endpoint;
+            const methodRadio = document.querySelector(`input[name="method"][value="${config.method}"]`);
+            if (methodRadio) methodRadio.checked = true;
+            
+            if (config.endpoint) {
+                addLog(`Loaded config: ${config.method} -> ${config.endpoint}`, 'success');
+            }
+        }
+
+        function saveConfig() {
+            const endpoint = document.getElementById('endpoint').value.trim();
+            const method = document.querySelector('input[name="method"]:checked').value;
+            
+            if (!endpoint) {
+                showStatus('configStatus', 'Please enter an endpoint URL', 'error');
+                return;
+            }
+            
+            config.endpoint = endpoint;
+            config.method = method;
+            
+            // Save to localStorage
+            localStorage.setItem('analyticsConfig', JSON.stringify(config));
+            
+            // Update URL parameters
+            const url = new URL(window.location);
+            url.searchParams.set('endpoint', endpoint);
+            url.searchParams.set('method', method);
+            window.history.replaceState({}, '', url);
+            
+            showStatus('configStatus', '✅ Configuration saved! URL updated for sharing.', 'success');
+            addLog(`Config saved: ${method} -> ${endpoint}`, 'success');
+        }
+
+        function showStatus(elementId, message, type) {
+            const statusDiv = document.getElementById(elementId);
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            setTimeout(() => {
+                statusDiv.textContent = '';
+                statusDiv.className = '';
+            }, 5000);
+        }
+
+        // Analytics sending function
+        function sendAnalytics(eventType, data = {}) {
+            if (!config.endpoint) {
+                addLog(`⚠️ Cannot send ${eventType}: No endpoint configured`, 'error');
+                return false;
+            }
+            
+            const payload = {
+                event: eventType,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                url: window.location.href,
+                ...data
+            };
+            
+            const payloadStr = JSON.stringify(payload);
+            
+            try {
+                if (config.method === 'beacon') {
+                    const blob = new Blob([payloadStr], { type: 'application/json' });
+                    const success = navigator.sendBeacon(config.endpoint, blob);
+                    
+                    if (success) {
+                        addLog(`✅ Sent via beacon: ${eventType}`, 'success');
+                        return true;
+                    } else {
+                        addLog(`❌ Beacon failed for: ${eventType}`, 'error');
+                        return false;
+                    }
+                } else if (config.method === 'fetch') {
+                    fetch(config.endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: payloadStr,
+                        keepalive: true
+                    }).then(() => {
+                        addLog(`✅ Sent via fetch (keepalive): ${eventType}`, 'success');
+                    }).catch(err => {
+                        addLog(`❌ Fetch failed for ${eventType}: ${err.message}`, 'error');
+                    });
+                    return true;
+                }
+            } catch (error) {
+                addLog(`❌ Error sending ${eventType}: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        // Event listeners for various browser events
+        function setupEventListeners() {
+            const listeners = [];
+            
+            // beforeunload - fires when page is about to be unloaded
+            window.addEventListener('beforeunload', (e) => {
+                addLog('🚨 Event: beforeunload', 'event');
+                sendAnalytics('beforeunload', { trigger: 'page_close_or_reload' });
+            });
+            listeners.push('beforeunload');
+            
+            // pagehide - more reliable than beforeunload
+            window.addEventListener('pagehide', (e) => {
+                addLog('🚨 Event: pagehide (persisted: ' + e.persisted + ')', 'event');
+                sendAnalytics('pagehide', { persisted: e.persisted });
+            });
+            listeners.push('pagehide');
+            
+            // visibilitychange - fires when tab is hidden/shown
+            document.addEventListener('visibilitychange', () => {
+                const state = document.visibilityState;
+                addLog(`🚨 Event: visibilitychange (${state})`, 'event');
+                if (state === 'hidden') {
+                    sendAnalytics('visibilitychange', { state: 'hidden' });
+                }
+            });
+            listeners.push('visibilitychange');
+            
+            // freeze event (Page Lifecycle API)
+            document.addEventListener('freeze', () => {
+                addLog('🚨 Event: freeze', 'event');
+                sendAnalytics('freeze');
+            }, { capture: true });
+            listeners.push('freeze');
+            
+            // resume event
+            document.addEventListener('resume', () => {
+                addLog('🚨 Event: resume', 'event');
+            }, { capture: true });
+            listeners.push('resume');
+            
+            // unload - least reliable, included for completeness
+            window.addEventListener('unload', () => {
+                sendAnalytics('unload');
+            });
+            listeners.push('unload');
+            
+            // Display active listeners
+            updateListenerStatus(listeners);
+            addLog(`✅ Initialized ${listeners.length} event listeners`, 'success');
+        }
+
+        function updateListenerStatus(listeners) {
+            const container = document.getElementById('listenerStatus');
+            container.innerHTML = listeners.map(listener => 
+                `<div class="listener-status active">✓ ${listener}</div>`
+            ).join('');
+        }
+
+        // Test functions
+        function testManualSend() {
+            const success = sendAnalytics('manual_test', { 
+                trigger: 'button_click',
+                testId: Math.random().toString(36).substr(2, 9)
+            });
+            if (success !== false) {
+                addLog('📤 Manual test triggered', 'info');
+            }
+        }
+
+        function testTimeout() {
+            addLog('⏱️ Starting timeout test (will send after 2 seconds)...', 'info');
+            setTimeout(() => {
+                sendAnalytics('timeout_test', { delay: '2000ms' });
+            }, 2000);
+        }
+
+        function triggerVisibilityChange() {
+            addLog('💡 Tip: Switch to another tab to trigger real visibilitychange event', 'info');
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            setupEventListeners();
+            addLog('🚀 Analytics test page initialized', 'success');
+        });
+    </script>
+</body>
+</html>
