@@ -46,8 +46,11 @@ index.html?endpoint=https://webhook.site/your-id&method=beacon
 
 Each analytics event includes:
 - `event` - Event type (beforeunload, pagehide, etc.)
+- `sendingMethod` - Method used to send the event (beacon/fetch)
+- `deviceType` - Type of device (mobile/tablet/desktop)
+- `browser` - Browser name (Chrome, Firefox, Safari, Edge, etc.)
+- `userAgent` - Full browser user agent string
 - `timestamp` - ISO 8601 timestamp
-- `userAgent` - Browser user agent
 - `url` - Current page URL
 - Additional event-specific data
 
